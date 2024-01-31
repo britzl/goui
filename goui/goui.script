@@ -1,0 +1,5 @@
+local goui = require "goui.goui"
+
+function init(self)
+	goui.init()
+end
