@@ -21,6 +21,10 @@ function init(self)
 
 	goui.set_pivot("play#sprite", goui.PIVOT_W)
 	goui.set_pivot("play#sprite", goui.PIVOT_CENTER)
+
+	timer.delay(2, true, function()
+		goui.set_visible("play#sprite", not goui.get_visible("play#sprite"))
+	end)
 end
 
 function on_input(self, action_id, action)

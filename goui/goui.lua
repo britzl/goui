@@ -16,6 +16,10 @@ M.PIVOT_SW = vmath.vector3(-1, -1, 0)
 M.PIVOT_W = vmath.vector3(-1, 0, 0)
 M.PIVOT_NW = vmath.vector3(-1, 1, 0)
 
+M.ADJUST_MODE_FIT = 0
+M.ADJUST_MODE_ZOOM = 1
+M.ADJUST_MODE_STRETCH = 2
+
 local projection = vmath.matrix4()
 local view = vmath.matrix4()
 
@@ -30,7 +34,11 @@ end
 
 local function lookup_or_create_node(id)
 	if not nodes[id] then
-		nodes[id] = {}
+		nodes[id] = {
+			enabled = true,
+			visible = true,
+			adjust_mode = M.ADJUST_MODE_FIT
+		}
 	end
 	return nodes[id]
 end
@@ -184,6 +192,10 @@ function M.set_pivot(id, pivot)
 end
 
 function M.pick_node(id, x, y)
+	local node = lookup_or_create_node(id)
+	if not node.enabled or not node.visible then
+		return false
+	end
 	local pos = go.get_world_position(id)
 	local size = go.get(id, "size") * 0.5
 	return x > (pos.x - size.x)
@@ -193,21 +205,35 @@ function M.pick_node(id, x, y)
 end
 
 function M.is_enabled(id)
+	local node = lookup_or_create_node(id)
+	if node.enabled == nil then
+		return true
+	end
+	return node.enabled
 end
 
-function M.set_enabled(id)
+function M.set_enabled(id, enabled)
+	local node = lookup_or_create_node(id)
+	node.enabled = enabled
+	msg.post(id, enabled and "enable" or "disable")
 end
 
 function M.get_visible(id)
+	local node = lookup_or_create_node(id)
+	return node.visible
 end
 
-function M.set_visible(id)
+function M.set_visible(id, visible)
+	local node = lookup_or_create_node(id)
+	node.visible = visible
+	msg.post(id, visible and "enable" or "disable")
 end
 
 function M.get_adjust_mode(id)
 end
 
 function M.set_adjust_mode(id)
+	local node = lookup_or_create_node(id)
 end
 
 
@@ -248,9 +274,7 @@ end
 function M.reset_nodes(id)
 end
 
-function M.set_render_order(id)
-end
-
+function M.set_render_order(id) error("set_render_order is not supported") end
 function M.set_fill_angle(id) error("set_fill_angle is not supported") end
 function M.get_fill_angle(id) error("get_fill_angle is not supported") end
 function M.set_perimeter_vertices(id) error("set_perimeter_vertices is not supported") end
@@ -295,6 +319,7 @@ function M.set_texture(id, value)
 end
 
 function M.get_flipbook(id)
+	return go.get(id, "animation")
 end
 
 function M.play_flipbook(id, animation, complete_function, play_properties)
